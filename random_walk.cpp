@@ -55,7 +55,27 @@ void walker_process()
     // Using rank ensures each walker gets a different sequence of random numbers.
     srand(time(NULL) + world_rank);
 
+    int steps = 0;
+
     // TODO: Implement the random walk logic for a walker process.
+    int position = 0;
+    for(int i=0;i<max_steps;i++){
+        if(rand()%2 == 0){
+            position +=1;
+            steps+=1;
+        }
+        else{
+            position-=1;
+            steps+=1;
+        }
+        if(position<-domain_size || position >domain_size || steps == max_steps){
+            std::cout <<"Rank: "<<world_rank<<" finished in "<< steps<<" steps."<< std::endl;
+            int message = 7;
+            MPI_Send(&message,1,MPI_INT,0,0,MPI_COMM_WORLD);
+            break;
+
+        }
+    }
     // 1. Initialize the walker's position to 0.
     // 2. Loop for a maximum of `max_steps`.
     // 3. In each step, randomly move left (-1) or right (+1).
@@ -69,6 +89,13 @@ void walker_process()
 
 void controller_process()
 {
+    int walkers = world_size-1;
+    for(int i=1; i<= walkers;i++){
+        int message = 0;
+        MPI_Recv(&message,1,MPI_INT,MPI_ANY_SOURCE,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+    }
+
+    std::cout << "Controller: All " << walkers << " walkers have finished" << std::endl;
     // TODO: Implement the logic for the controller process.
     // 1. Determine the number of walkers (world_size - 1).
     // 2. Loop that many times to receive a message from each walker.
